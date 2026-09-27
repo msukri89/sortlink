@@ -19,7 +19,7 @@ function setup_() {
 function createLink_(url, alias) {
   if (!/^https?:\/\//i.test(url)) return {ok:false,error:'URL harus diawali http:// atau https://.'};
   setup_();
-  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+  const sh = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(SHEET_NAME);
   const values = sh.getDataRange().getValues();
   let code = (alias || '').trim().replace(/[^A-Za-z0-9_-]/g,'').slice(0,32);
   if (code && values.some((r,i)=>i>0 && String(r[0]).toLowerCase()===code.toLowerCase())) return {ok:false,error:'Alias sudah digunakan.'};
@@ -32,7 +32,7 @@ function createLink_(url, alias) {
 
 function resolveLink_(code) {
   setup_();
-  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+  const sh = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(SHEET_NAME);
   const values = sh.getDataRange().getValues();
   for (let i=1;i<values.length;i++) {
     if (String(values[i][0])===String(code) && String(values[i][4]||'active')==='active') {
@@ -45,7 +45,7 @@ function resolveLink_(code) {
 
 function stats_() {
   setup_();
-  const sh=SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+  const sh=SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(SHEET_NAME);
   return {ok:true,links:Math.max(0,sh.getLastRow()-1)};
 }
 
