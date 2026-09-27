@@ -1,42 +1,32 @@
 <!doctype html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>SortLink</title>
-<meta name="description" content="SortLink - layanan short link sederhana, cepat, dan ringan.">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SortLink — Short Link Sederhana</title>
+<meta name="description" content="Buat short link dengan cepat dan mudah.">
 <style>
-*{box-sizing:border-box}
-body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f6f8fb;color:#172033}
-.wrap{min-height:100vh;display:grid;place-items:center;padding:24px}
-.card{width:min(680px,100%);background:#fff;border:1px solid #e5e9f0;border-radius:24px;padding:32px;box-shadow:0 12px 40px rgba(23,32,51,.08)}
-.brand{font-size:32px;font-weight:800;letter-spacing:-.8px;margin-bottom:8px}
-.sub{color:#667085;margin:0 0 28px}
-.row{display:flex;gap:10px}
-input{flex:1;min-width:0;border:1px solid #d8dee9;border-radius:14px;padding:14px 16px;font-size:16px;outline:none}
-button{border:0;border-radius:14px;padding:14px 20px;font-size:16px;font-weight:700;background:#172033;color:#fff;cursor:pointer}
-.note{margin-top:18px;color:#98a2b3;font-size:13px;line-height:1.6}
-@media(max-width:520px){.row{flex-direction:column}button{width:100%}}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f7f8fa;color:#172033}.wrap{min-height:100vh;display:grid;place-items:center;padding:24px}.card{width:min(720px,100%);background:#fff;border:1px solid #e7eaf0;border-radius:26px;padding:34px;box-shadow:0 16px 50px rgba(23,32,51,.08)}.brand{font-size:34px;font-weight:800;letter-spacing:-1px}.tag{display:inline-block;margin-top:8px;padding:6px 10px;border-radius:999px;background:#eef2ff;color:#4f46e5;font-size:12px;font-weight:700}.sub{color:#667085;line-height:1.6;margin:16px 0 28px}.form{display:grid;gap:12px}.input{width:100%;border:1px solid #d8dee9;border-radius:15px;padding:15px 16px;font-size:16px;outline:none}.input:focus{border-color:#667eea;box-shadow:0 0 0 4px rgba(102,126,234,.12)}.btn{border:0;border-radius:15px;padding:15px 18px;font-size:16px;font-weight:750;background:#172033;color:#fff;cursor:pointer}.btn:disabled{opacity:.55;cursor:not-allowed}.result{display:none;margin-top:20px;padding:16px;border-radius:16px;background:#f7f8fa}.result.show{display:block}.short{display:flex;gap:8px;align-items:center}.short a{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#172033;font-weight:700;text-decoration:none}.copy{border:1px solid #d8dee9;background:#fff;color:#172033;border-radius:11px;padding:9px 12px;font-weight:700}.note{margin:22px 0 0;color:#98a2b3;font-size:13px;line-height:1.6}.err{color:#b42318;margin-top:10px;font-size:14px}.footer{text-align:center;color:#98a2b3;font-size:12px;margin-top:18px}@media(max-width:520px){.card{padding:26px}.short{align-items:stretch;flex-direction:column}.copy{width:100%}}
 </style>
 </head>
 <body>
-<main class="wrap">
-<section class="card">
-<div class="brand">SortLink</div>
-<p class="sub">Short link sederhana, cepat, dan ringan.</p>
-<div class="row">
-<input id="linkInput" type="url" placeholder="Tempel URL tujuan..." autocomplete="off">
-<button id="createBtn" type="button">Buat Link</button>
-</div>
-<p class="note">Short link gratis berbasis GitHub Pages + Google Apps Script.</p>
-</section>
-</main>
+<main class="wrap"><section class="card">
+<div class="brand">SortLink</div><div class="tag">Simple • Fast • Free</div>
+<p class="sub">Buat tautan pendek yang mudah dibagikan. Mesin short-link akan terhubung ke Google Apps Script pada tahap berikutnya.</p>
+<form class="form" id="form">
+<input class="input" id="url" type="url" inputmode="url" autocomplete="url" placeholder="https://contoh.com/tautan-panjang" required>
+<button class="btn" id="btn" type="submit">Buat Short Link</button>
+</form>
+<div class="result" id="result"><div class="short"><a id="shortUrl" target="_blank" rel="noopener"></a><button class="copy" id="copy" type="button">Salin</button></div></div>
+<div class="err" id="err"></div>
+<p class="note">SortLink menggunakan GitHub Pages untuk tampilan dan Google Apps Script + Google Sheets untuk mesin link.</p>
+<div class="footer">SortLink</div>
+</section></main>
+<script src="config.js"></script>
 <script>
-document.getElementById('createBtn').addEventListener('click',()=>{
-const value=document.getElementById('linkInput').value.trim();
-if(!value){alert('Silakan masukkan URL tujuan.');return;}
-alert('Mesin short link sedang disiapkan.');
-});
+const form=document.getElementById('form'),url=document.getElementById('url'),btn=document.getElementById('btn'),result=document.getElementById('result'),shortUrl=document.getElementById('shortUrl'),copy=document.getElementById('copy'),err=document.getElementById('err');
+form.addEventListener('submit',async e=>{e.preventDefault();err.textContent='';result.classList.remove('show');const value=url.value.trim();if(!/^https?:\/\//i.test(value)){err.textContent='URL harus diawali http:// atau https://.';return}if(!window.SORTLINK_API_URL){err.textContent='Mesin SortLink belum dikonfigurasi.';return}btn.disabled=true;btn.textContent='Membuat...';try{const r=await fetch(window.SORTLINK_API_URL+'?action=create&url='+encodeURIComponent(value));const d=await r.json();if(!d.ok)throw new Error(d.error||'Gagal membuat short link.');shortUrl.href=d.shortUrl;shortUrl.textContent=d.shortUrl;result.classList.add('show')}catch(ex){err.textContent=ex.message||'Terjadi kesalahan.'}finally{btn.disabled=false;btn.textContent='Buat Short Link'}});
+copy.addEventListener('click',async()=>{await navigator.clipboard.writeText(shortUrl.href);copy.textContent='Tersalin';setTimeout(()=>copy.textContent='Salin',1400)});
 </script>
 </body>
 </html>
