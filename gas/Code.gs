@@ -9,6 +9,8 @@ function doGet(e) {
   return json_({ok:true,service:'SortLink API',version:'1.0'});
 }
 
+function setup() { setup_(); }
+
 function setup_() {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   let sh = ss.getSheetByName(SHEET_NAME);
