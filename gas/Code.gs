@@ -1,3 +1,4 @@
+const SPREADSHEET_ID = '1lv3urkXvkvxh9iBNNNCoNH4_TpLP8YTl8KHZrVtyQ0o';
 const SHEET_NAME = 'Links';
 
 function doGet(e) {
@@ -9,7 +10,7 @@ function doGet(e) {
 }
 
 function setup_() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   let sh = ss.getSheetByName(SHEET_NAME);
   if (!sh) sh = ss.insertSheet(SHEET_NAME);
   if (sh.getLastRow() === 0) sh.appendRow(['code','url','created_at','clicks','status']);
