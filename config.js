@@ -1,1 +1,2 @@
-// URL Web App Google Apps Script SortLink. Isi setelah Web App selesai dideploy.\nwindow.SORTLINK_API_URL = '';\n
+// URL Web App Google Apps Script SortLink.
+window.SORTLINK_API_URL = 'https://script.google.com/macros/s/AKfycbzvQZkARCqRoReC5-UAcBHRcMk62sY2w6PW4ANZ_jDnXmFCZIWYUIzyo5kYg45SWorx/exec';
