@@ -25,17 +25,31 @@
 <script src="config.js"></script>
 <script>
 const form=document.getElementById('form'),url=document.getElementById('url'),btn=document.getElementById('btn'),result=document.getElementById('result'),shortUrl=document.getElementById('shortUrl'),copy=document.getElementById('copy'),err=document.getElementById('err');
+let sortlinkApiResolve=null;
+let sortlinkApiReject=null;
+let sortlinkApiTimer=null;
+function sortlinkReceive(data){
+  if(!sortlinkApiResolve)return;
+  const resolve=sortlinkApiResolve;
+  clearTimeout(sortlinkApiTimer);
+  sortlinkApiResolve=null;
+  sortlinkApiReject=null;
+  sortlinkApiTimer=null;
+  resolve(data);
+}
 function callApi(params){
   return new Promise((resolve,reject)=>{
-    const name='sortlink_cb_'+Date.now()+'_'+Math.floor(Math.random()*100000);
+    if(sortlinkApiResolve){reject(new Error('Permintaan masih diproses.'));return}
+    sortlinkApiResolve=resolve;
+    sortlinkApiReject=reject;
     const script=document.createElement('script');
-    const query=new URLSearchParams({...params,prefix:name});
-    const timer=setTimeout(()=>{cleanup();reject(new Error('API tidak merespons.'))},15000);
-    window[name]=data=>{clearTimeout(timer);cleanup();resolve(data)};
-    script.onerror=()=>{clearTimeout(timer);cleanup();reject(new Error('Gagal terhubung ke mesin SortLink.'))};
+    const query=new URLSearchParams({...params,prefix:'sortlinkReceive',_ts:Date.now()});
+    const cleanup=()=>{clearTimeout(sortlinkApiTimer);script.remove();sortlinkApiResolve=null;sortlinkApiReject=null;sortlinkApiTimer=null};
+    sortlinkApiTimer=setTimeout(()=>{const r=sortlinkApiReject;cleanup();if(r)r(new Error('API tidak merespons.'))},15000);
+    script.async=true;
+    script.onerror=()=>{const r=sortlinkApiReject;cleanup();if(r)r(new Error('Gagal terhubung ke mesin SortLink.'))};
     script.src=window.SORTLINK_API_URL+'?'+query.toString();
     document.head.appendChild(script);
-    function cleanup(){delete window[name];script.remove()}
   });
 }
 form.addEventListener('submit',async e=>{e.preventDefault();err.textContent='';result.classList.remove('show');const value=url.value.trim();if(!/^https?:\/\//i.test(value)){err.textContent='URL harus diawali http:// atau https://.';return}if(!window.SORTLINK_API_URL){err.textContent='Mesin SortLink belum dikonfigurasi.';return}btn.disabled=true;btn.textContent='Membuat...';try{const d=await callApi({action:'create',url:value});if(!d.ok)throw new Error(d.error||'Gagal membuat short link.');shortUrl.href=d.shortUrl;shortUrl.textContent=d.shortUrl;result.classList.add('show')}catch(ex){err.textContent=ex.message||'Terjadi kesalahan.'}finally{btn.disabled=false;btn.textContent='Buat Short Link'}});
