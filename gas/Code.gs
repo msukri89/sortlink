@@ -2,11 +2,18 @@ const SPREADSHEET_ID = '1lv3urkXvkvxh9iBNNNCoNH4_TpLP8YTl8KHZrVtyQ0o';
 const SHEET_NAME = 'Links';
 
 function doGet(e) {
-  const action = (e.parameter.action || '').toLowerCase();
-  if (action === 'create') return json_(createLink_(e.parameter.url || '', e.parameter.alias || ''));
-  if (action === 'resolve') return json_(resolveLink_(e.parameter.code || ''));
-  if (action === 'stats') return json_(stats_());
-  return json_({ok:true,service:'SortLink API',version:'1.0'});
+  e = e || {parameter:{}};
+  const p = e.parameter || {};
+  const action = (p.action || '').toLowerCase();
+  const callback = String(p.callback || '').trim();
+
+  let data;
+  if (action === 'create') data = createLink_(p.url || '', p.alias || '');
+  else if (action === 'resolve') data = resolveLink_(p.code || '');
+  else if (action === 'stats') data = stats_();
+  else data = {ok:true,service:'SortLink API',version:'1.1'};
+
+  return callback ? jsonp_(data, callback) : json_(data);
 }
 
 function setup() { setup_(); }
@@ -59,5 +66,14 @@ function randomCode_(n) {
 }
 
 function json_(obj) {
-  return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
+  return ContentService.createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function jsonp_(obj, callback) {
+  if (!/^[A-Za-z_$][0-9A-Za-z_$\.]*$/.test(callback)) {
+    return json_({ok:false,error:'Callback tidak valid.'});
+  }
+  return ContentService.createTextOutput(callback+'('+JSON.stringify(obj)+');')
+    .setMimeType(ContentService.MimeType.JAVASCRIPT);
 }
